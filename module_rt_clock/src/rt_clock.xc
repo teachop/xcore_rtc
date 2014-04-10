@@ -7,25 +7,27 @@
 #include <stdint.h>
 #include "rt_clock.h"
 
-enum{RTC_SECONDS, RTC_MINUTES, RTC_HOURS, RTC_DAY,
-     RTC_DATE, RTC_MONTH, RTC_YEAR, RTC_CONTROL};
-
-#define RTC_REG_COUNT   8
-#define I2C_ADDR 0x68 // 0xd0, shifted left by 1 in the driver
-
 // ---------------------------------------------------------
 // rt_clock_task - Real Time Clock driver task
 //
 [[combinable]]
-void rt_clock_task(struct r_i2c &pins, interface rt_clock_if server rtc) {
+void rt_clock_task(struct r_i2c &pins, port ?sqw, interface rt_clock_if server rtc) {
     uint8_t clock_reg[RTC_REG_COUNT] = {0,0,0,1,1,1,0,0};
+    uint32_t enable_sqw = !isnull(sqw);// enable disable SQW pin
+    uint32_t sqw_in = 0;
 
     i2c_master_init(pins);
+    i2c_master_read_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT-1, pins);
+    if ( enable_sqw ) {
+        clock_reg[RTC_CONTROL] = 0x10; // 1Hz SQW
+    }
+    uint8_t control[1] = {clock_reg[RTC_CONTROL]};
+    i2c_master_write_reg(I2C_ADDR, RTC_CONTROL, control, 1, pins);
 
     while( 1 ) {
         select {
-        case rtc.getTime(uint8_t (&str)[20]): // 20YY-MM-DDThh:mm:ss
-            i2c_master_read_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT, pins);
+        case rtc.getTime(uint8_t (&str)[RTC_STRING_BUF]): // 20YY-MM-DDThh:mm:ss
+            i2c_master_read_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT-1, pins);
             uint32_t idx = 0;
             str[idx++] = '2';
             str[idx++] = '0';
@@ -49,7 +51,7 @@ void rt_clock_task(struct r_i2c &pins, interface rt_clock_if server rtc) {
             str[idx] = 0;
             break;
 
-        case rtc.setTime(uint8_t (&str)[20]): // 20YY-MM-DDThh:mm:ss
+        case rtc.setTime(uint8_t (&str)[RTC_STRING_BUF]): // 20YY-MM-DDThh:mm:ss
             clock_reg[RTC_YEAR]    = (str[2] <<4) | (str[3] &15);
             clock_reg[RTC_MONTH]   = (str[5] <<4) | (str[6] &15);
             clock_reg[RTC_DATE]    = (str[8] <<4) | (str[9] &15);
@@ -57,6 +59,26 @@ void rt_clock_task(struct r_i2c &pins, interface rt_clock_if server rtc) {
             clock_reg[RTC_MINUTES] = (str[14]<<4) | (str[15]&15);
             clock_reg[RTC_SECONDS] = (str[17]<<4) | (str[18]&15);
             i2c_master_write_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT, pins);
+            break;
+
+        case rtc.regRead(uint8_t (&regs)[RTC_REG_COUNT-1]):
+            i2c_master_read_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT-1, pins);
+            for (uint32_t loop=0; loop<sizeof(regs); ++loop) {
+                regs[loop] = clock_reg[loop];
+            }
+            break;
+
+        case rtc.regWrite(uint8_t (&regs)[RTC_REG_COUNT-1]):
+            for (uint32_t loop=0; loop<sizeof(regs); ++loop) {
+                clock_reg[loop] = regs[loop];
+            }
+            i2c_master_write_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT, pins);
+            break;
+
+        case enable_sqw => sqw when pinsneq(sqw_in) :> sqw_in:
+            if ( sqw_in ) {
+                rtc.tick1Hz();
+            }
             break;
         }
     }

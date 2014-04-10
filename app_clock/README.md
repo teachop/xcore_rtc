@@ -1,7 +1,8 @@
 ##Real Time Clock Example
-Implements a real time clock to demonstrate the RTC driver.  A keypad is used to adjust the clock time.  The real-time clock chip requires I2C port for communication.
-
-A serial 4 digit 7 segment display is used to show the lock combination value.
+- Implements a real time clock to demonstrate the RTC driver.
+- A serial 4 digit 7 segment display is used to show the time value and for editing the RTC settings.
+- A keypad is used to adjust the clock time.
+- The real-time clock chip requires I2C port for communication.
 
 ###Required Modules
 For an xCore xC application, the required modules are listed in the Makefile:
@@ -14,8 +15,9 @@ The display uses a single pin for serial data.  The demo wires this to a 4-wide 
 - **XS1_PORT_4C**  TXD UART transmit, j7.5, [6, 7, 8]
 - **XS1_PORT_1O**  I2C SCL, j7.21
 - **XS1_PORT_1I**  I2C SDA, j7.20
+- **XS1_PORT_1L**  I2C SQW, j7.19 (optional, pass **null** as the port to disable)
 
-The I2C port requires external pull-up resistors on both signals.  I used 4.7K and that worked.
+The clock chip requires external pull-up resistors on all signals.  I used 4.7K to 3.3V and that worked.
 
 Keypad connector pinout varies, this is just one example:
 
