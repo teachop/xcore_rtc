@@ -21,7 +21,7 @@ void rt_clock_task(struct r_i2c &pins, port ?sqw, interface rt_clock_if server r
     if ( enable_sqw ) {
         clock_reg[RTC_CONTROL] = 0x10; // 1Hz SQW
     }
-    uint8_t control[1] = {clock_reg[RTC_CONTROL]};
+    uint8_t control[1] = {clock_reg[RTC_CONTROL]}; // just the control reg
     i2c_master_write_reg(I2C_ADDR, RTC_CONTROL, control, 1, pins);
 
     while( 1 ) {
@@ -61,18 +61,18 @@ void rt_clock_task(struct r_i2c &pins, port ?sqw, interface rt_clock_if server r
             i2c_master_write_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT, pins);
             break;
 
-        case rtc.regRead(uint8_t (&regs)[RTC_REG_COUNT-1]):
-            i2c_master_read_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT-1, pins);
+        case rtc.regRead(uint8_t (&regs)[RTC_REG_COUNT]):
+            i2c_master_read_reg(I2C_ADDR, 0, clock_reg, sizeof(clock_reg), pins);
             for (uint32_t loop=0; loop<sizeof(regs); ++loop) {
                 regs[loop] = clock_reg[loop];
             }
             break;
 
-        case rtc.regWrite(uint8_t (&regs)[RTC_REG_COUNT-1]):
-            for (uint32_t loop=0; loop<sizeof(regs); ++loop) {
-                clock_reg[loop] = regs[loop];
+        case rtc.regWrite(uint8_t (&regs)[RTC_REG_COUNT]):
+            for (uint32_t loop=0; loop<sizeof(regs)-1; ++loop) {
+                clock_reg[loop] = regs[loop]; // control reg not copied over
             }
-            i2c_master_write_reg(I2C_ADDR, 0, clock_reg, RTC_REG_COUNT, pins);
+            i2c_master_write_reg(I2C_ADDR, 0, clock_reg, sizeof(clock_reg), pins);
             break;
 
         case enable_sqw => sqw when pinsneq(sqw_in) :> sqw_in:

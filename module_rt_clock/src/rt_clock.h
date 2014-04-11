@@ -28,9 +28,9 @@ interface rt_clock_if {
     [[clears_notification]] void getTime( uint8_t (&str)[RTC_STRING_BUF] );
     void setTime( uint8_t (&str)[RTC_STRING_BUF] );
 
-    // direct register access
-    [[clears_notification]] void regRead( uint8_t (&regs)[RTC_REG_COUNT-1] );
-    void regWrite( uint8_t (&regs)[RTC_REG_COUNT-1] );
+    // direct register access omits control register from writes
+    [[clears_notification]] void regRead( uint8_t (&regs)[RTC_REG_COUNT] );
+    void regWrite( uint8_t (&regs)[RTC_REG_COUNT] );
 };
 
 [[combinable]]

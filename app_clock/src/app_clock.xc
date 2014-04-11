@@ -21,8 +21,8 @@ void clock_task(interface rt_clock_if client rtc,
                 interface seven_seg_if client display) {
     uint32_t editing=0;
     uint32_t toggle=0;
-    uint8_t time[RTC_STRING_BUF];
-    uint8_t regs[RTC_REG_COUNT-1];
+    uint8_t time[RTC_STRING_BUF];  // 20YY-MM-DDThh:mm:ss - string form
+    uint8_t regs[RTC_REG_COUNT];   // RTC_xxx chip - register form
     uint8_t display_buf[] = "----";
     rtc.getTime(time);
 
@@ -30,44 +30,36 @@ void clock_task(interface rt_clock_if client rtc,
     while (1) {
         select {
         case rtc.tick1Hz():
-            // one second real time clock tick
+            // one second real time clock notify
             if ( editing ) {
                 --editing;
                 if ( !editing ) {
-                    // timeout from edit mode, validate and write
+                    // timeout ends edit mode, validate range then write
                     if (2<time[11]) time[11]=2;
                     if ((2==time[11]) && (3<time[12])) time[12]=3;
                     if (5<time[14]) time[14]=5;
                     rtc.setTime(time);
+                    toggle = 1;
                 } else {
-                    // read to clear notify
+                    // clear notify
                     rtc.regRead(regs);
                 }
             }
             if ( !editing ) {
-                // read into string buffer
+                // read real time into string buffer, clears notify
                 rtc.getTime(time);
-                if ( toggle ) {
-                    // update, colon off
-                    display_buf[0] = time[11];
-                    display_buf[1] = time[12];
-                    display_buf[2] = time[14];
-                    display_buf[3] = time[15];
-                    display.setText(display_buf);
-                } else {
-                    // update, colon on
-                    display.setClock(10*(time[11]&15)+(time[12]&15),
-                        10*(time[14]&15)+(time[15]&15),0);
-                }
+                display.setClock(10*(time[11]&15)+(time[12]&15),//hour
+                        10*(time[14]&15)+(time[15]&15),//minute
+                        toggle? 0 : SSEG_COLON);//colon toggles
                 toggle = !toggle;
             };
             break;
 
         case keypad.keyPressed():
-            // key-press notification, go get it
+            // key-press, reading keypad clears notify
             uint32_t pressed = keypad.getKey();
             if ( ('0'<=pressed) && ('9'>=pressed) ) {
-                // press '0'-'9' to insert digits
+                // '0'-'9' keys insert digits from the right
                 display_buf[0] = time[11] = time[12];//H
                 display_buf[1] = time[12] = time[14];//H
                 display_buf[2] = time[14] = time[15];//M
