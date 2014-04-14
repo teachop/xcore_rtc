@@ -10,9 +10,9 @@
 #include "i2c.h"
 
 // register map
-enum{RTC_SECONDS, RTC_MINUTES, RTC_HOURS, RTC_DAY,
-     RTC_DATE, RTC_MONTH, RTC_YEAR, RTC_CONTROL};
-#define RTC_REG_COUNT   8
+enum{RTC_SECONDS, RTC_MINUTES, RTC_HOURS,
+    RTC_DAY, RTC_DATE, RTC_MONTH, RTC_YEAR};
+#define RTC_REG_COUNT   7
 
 #define I2C_ADDR 0x68 // 0xd0, shifted left by 1 in the i2c driver
 
@@ -28,7 +28,7 @@ interface rt_clock_if {
     [[clears_notification]] void getTime( uint8_t (&str)[RTC_STRING_BUF] );
     void setTime( uint8_t (&str)[RTC_STRING_BUF] );
 
-    // direct register access omits control register from writes
+    // direct register access
     [[clears_notification]] void regRead( uint8_t (&regs)[RTC_REG_COUNT] );
     void regWrite( uint8_t (&regs)[RTC_REG_COUNT] );
 };
