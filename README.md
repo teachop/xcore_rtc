@@ -1,7 +1,9 @@
 ##XCore Driver for I2C Real Time Clock
-This project provides an XCore driver module for interfacing to a **DS1338** Real Time Clock chip (**DS1307** register compatible).  The driver is implemented in the XC language and has been tested on the XMOS [startKIT](http://www.xmos.com/startkit).
+This project provides an XCore driver module for interfacing to popular Real Time Clock chips such as the **DS1338** (**DS1307** register compatible).  The driver is implemented in the XC language and has been tested on the XMOS [startKIT](http://www.xmos.com/startkit).
 
-The **DS1338** was selected for its ability to run at 3.3 volts while remaining compatible with popular RTC chips.  Communication with the IC is via the two wire serial I2C bus.  Two 1 pin ports on the microcontroller are used with the "simple" version of the [XMOS XCore I2C module](https://github.com/xcore/sc_i2c).
+The **DS1338** IC was selected for development of the driver for its ability to run at 3.3 volts while remaining compatible with popular RTC chips.  Communication with the IC is via the two wire serial I2C bus.  Two 1 pin ports on the microcontroller are used with the "simple" version of the [XMOS XCore I2C module](https://github.com/xcore/sc_i2c).
+
+**Note**  A recent revision removes the control register from driver API interface.  If the application declares its buffer size using the header define **RTC_REG_COUNT** (which was 8 and is now 7) nothing will break.  The reasoning for this change is to allow support for the more accurate and featured **DS3231/3232** chips, which have compatibility with time-setting registers of the earlier parts but not with the control register.  Support for these new parts will be released after testing is complete - [hardware](http://www.adafruit.com/products/255) is on order...
 
 ###Two or Three Pins
 Interfacing to the clock chip on I2C requires two pins, **SCL** clock, and **SDA** data.  
