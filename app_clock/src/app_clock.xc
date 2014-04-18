@@ -102,7 +102,7 @@ int main() {
         clock_task(rtc, keypad, display);
         rt_clock_task(i2c_pins, sqw_pin, rtc);
         keypad_task(drive_pins, sense_pins, keypad);
-        seven_seg_task(txd_pin, display);
+        seven_seg_task(txd_pin, 9600, display);
     }
 
     return 0;
