@@ -16,7 +16,7 @@ All three require external pull-up resistors.
 The repository also contains an example clock program application to demonstrate the driver.  The example incorporates a [SparkFun Serial 7 Segment Display](https://github.com/teachop/xcore_seven_seg) as the clock display, and uses a [matrix keypad](https://github.com/teachop/xcore_keypad) for input controls.  
 
 ###Driver API
-Application clients use the driver by means of an XC [interface](https://www.xmos.com/support/documentation/xtools?subcategory=Programming%20in%20C%20and%20XC&component=app_interfaces_example) API.  This is an XCore message passing inter-task communication feature.
+Application clients use the driver by means of an XC [interface](https://www.xmos.com/support/documentation/xtools?subcategory=xTIMEcomposer&component=17653&page=23#xc-prog-guide-interface-connection) API.  This is an XCore message passing inter-task communication feature.
 
 The XC interface feature called **notification** is used to generate events for the client application at 1Hz.  The 1Hz events are based on the **SQW** output from the chip.
 
@@ -26,4 +26,4 @@ The XC interface feature called **notification** is used to generate events for 
 - **regWrite(regs)** Write to the first 7 **DS1338** registers directly.
 - **tick1Hz()** - Notification event indicating to the client at 1Hz.  Notification is cleared by **getTime(str)** or **regRead(regs)**.  This feature is optional.
 
-**Note:**  The notification (and use of the third pin) can be disabled by passing the port pin as [null](https://www.xmos.com/published/how-use-nullable-types) when the task is started.
+**Note:**  The notification (and use of the third pin) can be disabled by passing the port pin as null [(see nullable types)](https://www.xmos.com/support/documentation/xtools?subcategory=xTIMEcomposer&component=17653&page=25) when the task is started.
